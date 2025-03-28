@@ -11,6 +11,65 @@ const messageService = {
       console.log(`Error consumerToQueue::`, error);
     }
   },
+
+  // case processing
+  consumerToQueueNormal: async (queueName) => {
+    try {
+      const { channel, connection } = await connectToRabbitMQ();
+      const notiQueue = "notificationQueueProcess"; // assertQueue
+
+      channel.consume(notiQueue, (msg) => {
+        console.log(
+          `SEND notificationQueue successfully processed`,
+          msg.content.toString()
+        );
+        channel.ack(msg);
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
+  // case failed processing
+  consumerToQueueFailed: async (queueName) => {
+    try {
+      const { channel, connection } = await connectToRabbitMQ();
+
+      const notificationExchangeDLX = "notificationExDLX"; //notificationEx direct
+      const notificationRoutingKeyDLX = "notificationRoutingKeyDLX"; // asert
+
+      const notiQueueHandler = "notificationQueueHotFix";
+      await channel.assertExchange(notificationRoutingKeyDLX, "direct", {
+        durable: true,
+      });
+
+      const queueResult = await channel.assertQueue(notiQueueHandler, {
+        exclusive: false,
+      });
+
+      await channel.bindQueue(
+        queueResult.queue,
+        notificationExchangeDLX,
+        notificationRoutingKeyDLX
+      );
+
+      await channel.consume(
+        queueResult.queue,
+        (msgFailed) => {
+          console.log(
+            `this notification error:, pls hot fix::`,
+            msgFailed.content.toString()
+          );
+        },
+        {
+          noAck: true,
+        }
+      );
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
 };
 
 module.exports = messageService;

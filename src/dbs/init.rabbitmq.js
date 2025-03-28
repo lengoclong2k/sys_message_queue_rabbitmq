@@ -43,7 +43,7 @@ const consumerQueue = async (channel, queueName) => {
       queueName,
       (msg) => {
         console.log(
-          `REceived message:: ${queueName}::`,
+          `Received message:: ${queueName}::`,
           msg.content.toString()
         );
       },
