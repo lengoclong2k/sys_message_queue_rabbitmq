@@ -26,6 +26,7 @@ const messageService = {
         channel.ack(msg);
       });
     } catch (error) {
+      console.log("Long");
       console.error(error);
     }
   },
@@ -39,7 +40,7 @@ const messageService = {
       const notificationRoutingKeyDLX = "notificationRoutingKeyDLX"; // asert
 
       const notiQueueHandler = "notificationQueueHotFix";
-      await channel.assertExchange(notificationRoutingKeyDLX, "direct", {
+      await channel.assertExchange(notificationExchangeDLX, "direct", {
         durable: true,
       });
 
