@@ -2,6 +2,11 @@
 
 const { connectToRabbitMQ, consumerQueue } = require("../dbs/init.rabbitmq");
 
+// const log = console.log;
+
+// console.log = function () {
+//   log.apply(console, [new Date()].concat(arguments));
+// };
 const messageService = {
   consumerToQueue: async (queueName) => {
     try {
@@ -18,13 +23,39 @@ const messageService = {
       const { channel, connection } = await connectToRabbitMQ();
       const notiQueue = "notificationQueueProcess"; // assertQueue
 
+      //1. TTL
+
+      //2. LOGIC
       channel.consume(notiQueue, (msg) => {
-        console.log(
-          `SEND notificationQueue successfully processed`,
-          msg.content.toString()
-        );
-        channel.ack(msg);
+        try {
+          const numberTest = Math.random();
+          console.log({ numberTest });
+
+          if (numberTest < 0.8) {
+            throw new Error("Send notification failed:: HOT FIX");
+          }
+
+          console.log(
+            `Send notificationQueue sucessfully processed::`,
+            msg.content.toString()
+          );
+          channel.ack(msg);
+        } catch (error) {
+          // console.error(`Send notification error::`, error);
+          channel.nack(msg, false, false);
+          /*
+            nack: negative acknownledgement
+          */
+        }
       });
+
+      // channel.consume(notiQueue, (msg) => {
+      //   console.log(
+      //     `SEND notificationQueue successfully processed`,
+      //     msg.content.toString()
+      //   );
+      //   channel.ack(msg);
+      // });
     } catch (error) {
       console.log("Long");
       console.error(error);
